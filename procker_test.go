@@ -2,8 +2,15 @@ package procker
 
 import (
 	"bytes"
+	"reflect"
 	"testing"
 )
+
+func assert(t *testing.T, expected, actual interface{}) {
+	if !reflect.DeepEqual(expected, actual) {
+		t.Errorf("expected: %+v, actual: %+v", expected, actual)
+	}
+}
 
 func TestProcessStart(t *testing.T) {
 	stdOut := &bytes.Buffer{}
@@ -22,13 +29,8 @@ func TestProcessStart(t *testing.T) {
 		t.Fatal("process failed")
 	}
 
-	if stdOut.String() != "procker" {
-		t.Error("bad output")
-	}
-
-	if stdErr.String() != "" {
-		t.Error("bad output")
-	}
+	assert(t, "procker", stdOut.String())
+	assert(t, "", stdErr.String())
 }
 
 func TestProcessStartUsingEnv(t *testing.T) {
@@ -48,11 +50,6 @@ func TestProcessStartUsingEnv(t *testing.T) {
 		t.Fatal("process failed")
 	}
 
-	if stdOut.String() != "hello world" {
-		t.Error("bad output")
-	}
-
-	if stdErr.String() != "" {
-		t.Error("bad output")
-	}
+	assert(t, "hello world", stdOut.String())
+	assert(t, "", stdErr.String())
 }
