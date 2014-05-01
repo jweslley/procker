@@ -17,9 +17,10 @@ func NewProcess(name, command string) *Process {
 	return &Process{Name: name, Command: command}
 }
 
-func (p *Process) Start(env []string, out, err io.Writer) error {
+func (p *Process) Start(dir string, env []string, out, err io.Writer) error {
 	args := strings.Fields(p.expandedCmd(env))
 	p.cmd = exec.Command(args[0], args[1:]...)
+	p.cmd.Dir = dir
 	p.cmd.Env = env
 	p.cmd.Stdout = out
 	p.cmd.Stderr = err
