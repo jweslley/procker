@@ -74,3 +74,30 @@ func TestProcessStartUsingWithCustomDir(t *testing.T) {
 	assert(t, "test file!\n", stdOut.String())
 	assert(t, "", stdErr.String())
 }
+
+func TestProcessCantBeStartTwice(t *testing.T) {
+	stdOut := &bytes.Buffer{}
+	stdErr := &bytes.Buffer{}
+	var env []string
+
+	p := NewProcess("cat", "cat README.md")
+	err := p.Start("./test", env, stdOut, stdErr)
+
+	if err != nil {
+		t.Fatal("process failed")
+	}
+
+	err = p.Start("./test", env, stdOut, stdErr)
+	if err == nil {
+		t.Fatal("already started")
+	}
+}
+
+func TestProcessWaitOnlyStarted(t *testing.T) {
+	p := NewProcess("cat", "cat README.md")
+	err := p.Wait()
+
+	if err == nil {
+		t.Fatal("not started")
+	}
+}

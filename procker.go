@@ -1,6 +1,7 @@
 package procker
 
 import (
+	"errors"
 	"io"
 	"os"
 	"os/exec"
@@ -18,6 +19,10 @@ func NewProcess(name, command string) *Process {
 }
 
 func (p *Process) Start(dir string, env []string, out, err io.Writer) error {
+	if p.cmd != nil {
+		return errors.New("procker: already started")
+	}
+
 	args := strings.Fields(p.expandedCmd(env))
 	p.cmd = exec.Command(args[0], args[1:]...)
 	p.cmd.Dir = dir
@@ -28,6 +33,9 @@ func (p *Process) Start(dir string, env []string, out, err io.Writer) error {
 }
 
 func (p *Process) Wait() error {
+	if p.cmd == nil {
+		return errors.New("procker: not started")
+	}
 	return p.cmd.Wait()
 }
 
