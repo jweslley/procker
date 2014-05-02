@@ -39,6 +39,13 @@ func (p *Process) Wait() error {
 	return p.cmd.Wait()
 }
 
+func (p *Process) Kill() error {
+	if p.cmd == nil {
+		return errors.New("procker: not started")
+	}
+	return p.cmd.Process.Kill()
+}
+
 func (p *Process) Pid() int {
 	if p.cmd == nil {
 		return 0

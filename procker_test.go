@@ -122,3 +122,31 @@ func TestProcessPid(t *testing.T) {
 		t.Error("not started")
 	}
 }
+
+func TestProcessKill(t *testing.T) {
+	stdOut := &bytes.Buffer{}
+	stdErr := &bytes.Buffer{}
+	var env []string
+
+	p := NewProcess("lazyecho", "sh test/lazyecho.sh 5 procker")
+	err := p.Start("", env, stdOut, stdErr)
+
+	if err != nil {
+		t.Fatal("process failed")
+	}
+
+	go func() {
+		erw := p.Wait()
+		if erw == nil {
+			t.Fatalf("not killed")
+		}
+	}()
+
+	err = p.Kill()
+	if err != nil {
+		t.Fatal("not killed")
+	}
+
+	assert(t, "", stdOut.String())
+	assert(t, "", stdErr.String())
+}
