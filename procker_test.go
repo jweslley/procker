@@ -101,3 +101,24 @@ func TestProcessWaitOnlyStarted(t *testing.T) {
 		t.Fatal("not started")
 	}
 }
+
+func TestProcessPid(t *testing.T) {
+	stdOut := &bytes.Buffer{}
+	stdErr := &bytes.Buffer{}
+	var env []string
+
+	p := NewProcess("cat", "cat README.md")
+	if p.Pid() != 0 {
+		t.Error("already started")
+	}
+
+	err := p.Start("./test", env, stdOut, stdErr)
+	if err != nil {
+		t.Fatal("process failed")
+	}
+
+	err = p.Wait()
+	if p.Pid() == 0 {
+		t.Error("not started")
+	}
+}

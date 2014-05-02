@@ -39,6 +39,13 @@ func (p *Process) Wait() error {
 	return p.cmd.Wait()
 }
 
+func (p *Process) Pid() int {
+	if p.cmd == nil {
+		return 0
+	}
+	return p.cmd.Process.Pid
+}
+
 func (p *Process) expandedCmd(env []string) string {
 	m := env2Map(env)
 	return os.Expand(p.Command, func(name string) string {
