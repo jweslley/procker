@@ -12,6 +12,8 @@ import (
 )
 
 func main() {
+	log.SetOutput(procker.NewPrefixedWriter(os.Stdout, "procker"))
+
 	procfile := flag.String("f", "Procfile", "Procfile declaring commands to run")
 
 	file, err := os.Open(*procfile)
@@ -42,7 +44,10 @@ func main() {
 	wd := path.Dir(*procfile)
 	for name, process := range processes {
 		log.Printf("starting %s - %s", name, process.Command)
-		process.Start(wd, []string{}, os.Stdout, os.Stderr)
+		process.Start(wd,
+			[]string{},
+			procker.NewPrefixedWriter(os.Stdout, name),
+			procker.NewPrefixedWriter(os.Stderr, name))
 	}
 
 	for _, process := range processes {
