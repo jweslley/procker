@@ -18,7 +18,11 @@ func TestProcessStart(t *testing.T) {
 	var env []string
 
 	p := NewProcess("simple", "echo -n procker")
-	err := p.Start("", env, stdOut, stdErr)
+	p.Dir = ""
+	p.Env = env
+	p.Stdout = stdOut
+	p.Stderr = stdErr
+	err := p.Start()
 
 	if err != nil {
 		t.Fatal("process failed")
@@ -39,7 +43,11 @@ func TestProcessStartUsingEnv(t *testing.T) {
 	var env []string = []string{"PROCKER_MSG=hello", "PROCKER_MSG2=world"}
 
 	p := NewProcess("simple", "echo -n $PROCKER_MSG $PROCKER_MSG2")
-	err := p.Start("", env, stdOut, stdErr)
+	p.Dir = ""
+	p.Env = env
+	p.Stdout = stdOut
+	p.Stderr = stdErr
+	err := p.Start()
 
 	if err != nil {
 		t.Fatal("process failed")
@@ -60,7 +68,11 @@ func TestProcessStartUsingWithCustomDir(t *testing.T) {
 	var env []string
 
 	p := NewProcess("cat", "cat README.md")
-	err := p.Start("./test", env, stdOut, stdErr)
+	p.Dir = "./test"
+	p.Env = env
+	p.Stdout = stdOut
+	p.Stderr = stdErr
+	err := p.Start()
 
 	if err != nil {
 		t.Fatal("process failed")
@@ -81,13 +93,17 @@ func TestProcessCantBeStartTwice(t *testing.T) {
 	var env []string
 
 	p := NewProcess("cat", "cat README.md")
-	err := p.Start("./test", env, stdOut, stdErr)
+	p.Dir = "./test"
+	p.Env = env
+	p.Stdout = stdOut
+	p.Stderr = stdErr
+	err := p.Start()
 
 	if err != nil {
 		t.Fatal("process failed")
 	}
 
-	err = p.Start("./test", env, stdOut, stdErr)
+	err = p.Start()
 	if err == nil {
 		t.Fatal("already started")
 	}
@@ -108,11 +124,16 @@ func TestProcessPid(t *testing.T) {
 	var env []string
 
 	p := NewProcess("cat", "cat README.md")
+	p.Dir = "./test"
+	p.Env = env
+	p.Stdout = stdOut
+	p.Stderr = stdErr
+
 	if p.Pid() != 0 {
 		t.Error("already started")
 	}
 
-	err := p.Start("./test", env, stdOut, stdErr)
+	err := p.Start()
 	if err != nil {
 		t.Fatal("process failed")
 	}
@@ -129,7 +150,11 @@ func TestProcessKill(t *testing.T) {
 	var env []string
 
 	p := NewProcess("lazyecho", "sh test/lazyecho.sh 5 procker")
-	err := p.Start("", env, stdOut, stdErr)
+	p.Dir = ""
+	p.Env = env
+	p.Stdout = stdOut
+	p.Stderr = stdErr
+	err := p.Start()
 
 	if err != nil {
 		t.Fatal("process failed")

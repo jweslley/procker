@@ -20,10 +20,11 @@ func main() {
 	flag.Parse()
 
 	procSpecs := parseProfile(*procfile)
-	processes := buildProcesses(procSpecs)
 	env := parseEnv(*envfile)
+	dir := path.Dir(*procfile)
+	padding := longestName(procSpecs)
+	processes := buildProcesses(procSpecs, dir, env, padding)
 
-	padding := longestName(processes)
 	log.SetOutput(procker.NewPrefixedWriter(os.Stdout, prefix(programName, padding)))
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -38,13 +39,9 @@ func main() {
 		}
 	}()
 
-	wd := path.Dir(*procfile)
 	for name, process := range processes {
 		log.Printf("starting %s - %s", name, process.Command)
-		process.Start(wd,
-			env,
-			procker.NewPrefixedWriter(os.Stdout, prefix(name, padding)),
-			procker.NewPrefixedWriter(os.Stderr, prefix(name, padding)))
+		process.Start()
 	}
 
 	for _, process := range processes {
@@ -52,10 +49,20 @@ func main() {
 	}
 }
 
-func buildProcesses(specs map[string]string) map[string]*procker.Process {
+func buildProcesses(
+	specs map[string]string,
+	dir string,
+	env []string,
+	padding int) map[string]*procker.Process {
+
 	processes := make(map[string]*procker.Process)
 	for name, command := range specs {
-		processes[name] = procker.NewProcess(name, command)
+		process := procker.NewProcess(name, command)
+		process.Dir = dir
+		process.Env = env
+		process.Stdout = procker.NewPrefixedWriter(os.Stdout, prefix(name, padding))
+		process.Stderr = procker.NewPrefixedWriter(os.Stderr, prefix(name, padding))
+		processes[name] = process
 	}
 	return processes
 }
@@ -87,7 +94,7 @@ func parseEnv(filepath string) []string {
 	return env
 }
 
-func longestName(processes map[string]*procker.Process) int {
+func longestName(processes map[string]string) int {
 	max := len(programName)
 	for name, _ := range processes {
 		if len(name) > max {
