@@ -23,7 +23,7 @@ func main() {
 	env := parseEnv(*envfile)
 	dir := path.Dir(*procfile)
 	padding := longestName(procSpecs)
-	processes := buildProcesses(procSpecs, dir, env, padding)
+	process := buildProcess(procSpecs, dir, env, padding)
 
 	log.SetOutput(procker.NewPrefixedWriter(os.Stdout, prefix(programName, padding)))
 	c := make(chan os.Signal, 1)
@@ -31,40 +31,36 @@ func main() {
 	go func() {
 		for sig := range c {
 			log.Printf("%v received, stopping processes and exiting.", sig)
-			for name, process := range processes {
-				log.Printf("killing %s", name)
-				process.Kill()
-			}
+			process.Kill()
 			os.Exit(1)
 		}
 	}()
 
-	for name, process := range processes {
-		log.Printf("starting %s - %s", name, process.Command)
-		process.Start()
-	}
+	log.Printf("starting processes")
+	err := process.Start()
+	log.Printf("error on start %s", err)
 
-	for _, process := range processes {
-		process.Wait()
-	}
+	log.Printf("waiting processes")
+	err = process.Wait()
+	log.Printf("error on wait %s", err)
 }
 
-func buildProcesses(
+func buildProcess(
 	specs map[string]string,
 	dir string,
 	env []string,
-	padding int) map[string]*procker.Process {
+	padding int) *procker.ProcessSet {
 
-	processes := make(map[string]*procker.Process)
+	p := []*procker.Process{}
 	for name, command := range specs {
 		process := procker.NewProcess(name, command)
 		process.Dir = dir
 		process.Env = env
 		process.Stdout = procker.NewPrefixedWriter(os.Stdout, prefix(name, padding))
 		process.Stderr = procker.NewPrefixedWriter(os.Stderr, prefix(name, padding))
-		processes[name] = process
+		p = append(p, process)
 	}
-	return processes
+	return procker.NewProcessSet(p...)
 }
 
 func parseProfile(filepath string) map[string]string {

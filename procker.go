@@ -67,3 +67,57 @@ func (p *Process) expandedCmd(env []string) string {
 		return m[name]
 	})
 }
+
+func (p *Process) String() string {
+	return p.Name
+}
+
+type ProcessSet struct {
+	processes []*Process
+	started   bool
+}
+
+func NewProcessSet(processes ...*Process) *ProcessSet {
+	return &ProcessSet{processes: processes}
+}
+
+func (ps *ProcessSet) Start() error {
+	if ps.Started() {
+		return errors.New("procker: already started")
+	}
+
+	var err error
+	for _, process := range ps.processes {
+		err = process.Start()
+	}
+	ps.started = true
+	return err
+}
+
+func (ps *ProcessSet) Wait() error {
+	if !ps.Started() {
+		return errors.New("procker: not started")
+	}
+
+	var err error
+	for _, process := range ps.processes {
+		err = process.Wait()
+	}
+	return err
+}
+
+func (ps *ProcessSet) Kill() error {
+	if !ps.Started() {
+		return errors.New("procker: not started")
+	}
+
+	var err error
+	for _, process := range ps.processes {
+		err = process.Kill()
+	}
+	return err
+}
+
+func (ps *ProcessSet) Started() bool {
+	return ps.started
+}
