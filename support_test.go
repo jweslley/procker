@@ -8,13 +8,6 @@ import (
 	"testing"
 )
 
-func assertCommand(t *testing.T, p *Process, command string) {
-	if p == nil {
-		t.Fatalf("process not found")
-	}
-	assert(t, command, p.Command)
-}
-
 func TestPrefixedWriter(t *testing.T) {
 	b := &bytes.Buffer{}
 
@@ -34,9 +27,9 @@ redis:   redis-server /usr/local/etc/redis.conf`)
 		t.Fatalf("has length %d; want %d", len(p), 3)
 	}
 
-	assertCommand(t, p["web"], "python ranking/manage.py runserver")
-	assertCommand(t, p["db"], "postgres -D /usr/local/var/postgres")
-	assertCommand(t, p["redis"], "redis-server /usr/local/etc/redis.conf")
+	assert(t, "python ranking/manage.py runserver", p["web"])
+	assert(t, "postgres -D /usr/local/var/postgres", p["db"])
+	assert(t, "redis-server /usr/local/etc/redis.conf", p["redis"])
 }
 
 func TestParseProcfileIgnoreBlankLines(t *testing.T) {
@@ -55,9 +48,9 @@ redis:   redis-server /usr/local/etc/redis.conf
 		t.Fatalf("has length %d; want %d", len(p), 3)
 	}
 
-	assertCommand(t, p["web"], "python ranking/manage.py runserver")
-	assertCommand(t, p["db"], "postgres -D /usr/local/var/postgres")
-	assertCommand(t, p["redis"], "redis-server /usr/local/etc/redis.conf")
+	assert(t, "python ranking/manage.py runserver", p["web"])
+	assert(t, "postgres -D /usr/local/var/postgres", p["db"])
+	assert(t, "redis-server /usr/local/etc/redis.conf", p["redis"])
 }
 
 func TestMustNotParseProcfileWithInvalidTypeNames(t *testing.T) {

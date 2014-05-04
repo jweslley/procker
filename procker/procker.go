@@ -19,7 +19,8 @@ func main() {
 	envfile := flag.String("e", ".env", "File containing environment variables to be used")
 	flag.Parse()
 
-	processes := parseProfile(*procfile)
+	procSpecs := parseProfile(*procfile)
+	processes := buildProcesses(procSpecs)
 	env := parseEnv(*envfile)
 
 	padding := longestName(processes)
@@ -51,7 +52,15 @@ func main() {
 	}
 }
 
-func parseProfile(filepath string) map[string]*procker.Process {
+func buildProcesses(specs map[string]string) map[string]*procker.Process {
+	processes := make(map[string]*procker.Process)
+	for name, command := range specs {
+		processes[name] = procker.NewProcess(name, command)
+	}
+	return processes
+}
+
+func parseProfile(filepath string) map[string]string {
 	file, err := os.Open(filepath)
 	if err != nil {
 		log.Fatalf("procker: %v", err)

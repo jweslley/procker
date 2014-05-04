@@ -35,10 +35,10 @@ func (w *PrefixedWriter) Write(p []byte) (n int, err error) {
 
 var procfileRegexp = regexp.MustCompile("^([A-Za-z0-9_]+):\\s*(.+)$")
 
-// ParseProcfile parses io.Reader into a Process's map.
+// ParseProcfile parses io.Reader into a process's map.
 // Read more about Procfiles: https://devcenter.heroku.com/articles/procfile
-func ParseProcfile(r io.Reader) (map[string]*Process, error) {
-	p := make(map[string]*Process)
+func ParseProcfile(r io.Reader) (map[string]string, error) {
+	p := make(map[string]string)
 	scanner := bufio.NewScanner(r)
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -52,7 +52,7 @@ func ParseProcfile(r io.Reader) (map[string]*Process, error) {
 		}
 
 		name, command := matches[1], matches[2]
-		p[name] = NewProcess(name, command)
+		p[name] = command
 	}
 
 	if err := scanner.Err(); err != nil {
