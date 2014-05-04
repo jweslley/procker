@@ -1,6 +1,9 @@
 package procker
 
 import (
+	"bytes"
+	"fmt"
+	"os"
 	"strings"
 	"testing"
 )
@@ -10,6 +13,14 @@ func assertCommand(t *testing.T, p *Process, command string) {
 		t.Fatalf("process not found")
 	}
 	assert(t, command, p.Command)
+}
+
+func TestPrefixedWriter(t *testing.T) {
+	b := &bytes.Buffer{}
+
+	out := NewPrefixedWriter(b, "test> ")
+	fmt.Fprint(out, "wintermute")
+	assert(t, "test> wintermute", b.String())
 }
 
 func TestParseProcfile(t *testing.T) {
@@ -57,4 +68,41 @@ job: bundle exec rake jobs:work`)
 	if err == nil {
 		t.Fatalf("must not parse invalid lines")
 	}
+}
+
+func TestParseEnv(t *testing.T) {
+	r := strings.NewReader(`RAILS_ENV=production
+QUEUE=system
+PYTHONUNBUFFERED=True`)
+
+	env, _ := ParseEnv(r)
+
+	if len(env) != 3 {
+		t.Fatalf("has length %d; want %d", len(env), 3)
+	}
+
+	assert(t, "RAILS_ENV=production", env[0])
+	assert(t, "QUEUE=system", env[1])
+	assert(t, "PYTHONUNBUFFERED=True", env[2])
+}
+
+func TestParseEnvExpandValues(t *testing.T) {
+	path := os.Getenv("GOPATH")
+	r := strings.NewReader(`RAILS_ENV=production
+QUEUE=system
+PYTHONUNBUFFERED=True
+PROCKER_APP_ROOT=$GOPATH/xpto
+PROCKER_APP_TMP=$PROCKER_APP_ROOT/tmp`)
+
+	env, _ := ParseEnv(r)
+
+	if len(env) != 5 {
+		t.Fatalf("has length %d; want %d", len(env), 5)
+	}
+
+	assert(t, "RAILS_ENV=production", env[0])
+	assert(t, "QUEUE=system", env[1])
+	assert(t, "PYTHONUNBUFFERED=True", env[2])
+	assert(t, fmt.Sprintf("PROCKER_APP_ROOT=%s/xpto", path), env[3])
+	assert(t, fmt.Sprintf("PROCKER_APP_TMP=%s/xpto/tmp", path), env[4])
 }

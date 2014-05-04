@@ -59,14 +59,3 @@ func (p *Process) expandedCmd(env []string) string {
 		return m[name]
 	})
 }
-
-func env2Map(env []string) map[string]string {
-	m := make(map[string]string)
-	for _, value := range env {
-		pair := strings.SplitN(value, "=", 2)
-		if len(pair) == 2 {
-			m[pair[0]] = pair[1]
-		}
-	}
-	return m
-}

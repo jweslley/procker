@@ -15,18 +15,11 @@ func main() {
 	log.SetOutput(procker.NewPrefixedWriter(os.Stdout, "procker"))
 
 	procfile := flag.String("f", "Procfile", "Procfile declaring commands to run")
+	envfile := flag.String("e", ".env", "File containing environment variables to be used")
+	flag.Parse()
 
-	file, err := os.Open(*procfile)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer file.Close()
-
-	processes, err := procker.ParseProcfile(file)
-	if err != nil {
-		log.Fatalf("procker: %v", err)
-	}
-	log.Println(processes)
+	processes := parseProfile(*procfile)
+	env := parseEnv(*envfile)
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -45,7 +38,7 @@ func main() {
 	for name, process := range processes {
 		log.Printf("starting %s - %s", name, process.Command)
 		process.Start(wd,
-			[]string{},
+			env,
 			procker.NewPrefixedWriter(os.Stdout, name),
 			procker.NewPrefixedWriter(os.Stderr, name))
 	}
@@ -53,4 +46,31 @@ func main() {
 	for _, process := range processes {
 		process.Wait()
 	}
+}
+
+func parseProfile(filepath string) map[string]*procker.Process {
+	file, err := os.Open(filepath)
+	if err != nil {
+		log.Fatalf("procker: %v", err)
+	}
+	defer file.Close()
+
+	processes, err := procker.ParseProcfile(file)
+	if err != nil {
+		log.Fatalf("procker: %v", err)
+	}
+	return processes
+}
+
+func parseEnv(filepath string) []string {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return []string{}
+	}
+
+	env, err := procker.ParseEnv(file)
+	if err != nil {
+		log.Fatalf("procker: %v", err)
+	}
+	return env
 }
