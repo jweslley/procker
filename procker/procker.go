@@ -49,15 +49,13 @@ func buildProcess(
 	specs map[string]string,
 	dir string,
 	env []string,
-	padding int) *procker.ProcessSet {
+	padding int) procker.Process {
 
-	p := []*procker.Process{}
+	p := []procker.Process{}
 	for name, command := range specs {
-		process := procker.NewProcess(name, command)
-		process.Dir = dir
-		process.Env = env
-		process.Stdout = procker.NewPrefixedWriter(os.Stdout, prefix(name, padding))
-		process.Stderr = procker.NewPrefixedWriter(os.Stderr, prefix(name, padding))
+		process := procker.NewProcess(name, command, dir, env,
+			procker.NewPrefixedWriter(os.Stdout, prefix(name, padding)),
+			procker.NewPrefixedWriter(os.Stderr, prefix(name, padding)))
 		p = append(p, process)
 	}
 	return procker.NewProcessSet(p...)
@@ -92,7 +90,7 @@ func parseEnv(filepath string) []string {
 
 func longestName(processes map[string]string) int {
 	max := len(programName)
-	for name, _ := range processes {
+	for name := range processes {
 		if len(name) > max {
 			max = len(name)
 		}

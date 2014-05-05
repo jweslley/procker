@@ -8,80 +8,97 @@ import (
 	"strings"
 )
 
-type Process struct {
-	Name    string
-	Command string
-	Dir     string
-	Env     []string
-	Stdout  io.Writer
-	Stderr  io.Writer
+type Process interface {
+	Start() error
+	Wait() error
+	Kill() error
+	Started() bool
+}
+
+type sysProcess struct {
+	name    string
+	command string
+	dir     string
+	env     []string
+	stdout  io.Writer
+	stderr  io.Writer
 	cmd     *exec.Cmd
 }
 
-func NewProcess(name, command string) *Process {
-	return &Process{Name: name, Command: command}
+func NewProcess(
+	name, command, dir string,
+	env []string,
+	stdout, stderr io.Writer) Process {
+
+	return &sysProcess{
+		name:    name,
+		command: command,
+		dir:     dir,
+		env:     env,
+		stdout:  stdout,
+		stderr:  stderr}
 }
 
-func (p *Process) Start() error {
+func (p *sysProcess) Start() error {
 	if p.Started() {
 		return errors.New("procker: already started")
 	}
 
-	args := strings.Fields(p.expandedCmd(p.Env))
+	args := strings.Fields(p.expandedCmd(p.env))
 	p.cmd = exec.Command(args[0], args[1:]...)
-	p.cmd.Dir = p.Dir
-	p.cmd.Env = p.Env
-	p.cmd.Stdout = p.Stdout
-	p.cmd.Stderr = p.Stderr
+	p.cmd.Dir = p.dir
+	p.cmd.Env = p.env
+	p.cmd.Stdout = p.stdout
+	p.cmd.Stderr = p.stderr
 	return p.cmd.Start()
 }
 
-func (p *Process) Wait() error {
+func (p *sysProcess) Wait() error {
 	if !p.Started() {
 		return errors.New("procker: not started")
 	}
 	return p.cmd.Wait()
 }
 
-func (p *Process) Kill() error {
+func (p *sysProcess) Kill() error {
 	if !p.Started() {
 		return errors.New("procker: not started")
 	}
 	return p.cmd.Process.Kill()
 }
 
-func (p *Process) Pid() int {
+func (p *sysProcess) Pid() int {
 	if !p.Started() {
 		return 0
 	}
 	return p.cmd.Process.Pid
 }
 
-func (p *Process) Started() bool {
+func (p *sysProcess) Started() bool {
 	return p.cmd != nil
 }
 
-func (p *Process) expandedCmd(env []string) string {
+func (p *sysProcess) expandedCmd(env []string) string {
 	m := env2Map(env)
-	return os.Expand(p.Command, func(name string) string {
+	return os.Expand(p.command, func(name string) string {
 		return m[name]
 	})
 }
 
-func (p *Process) String() string {
-	return p.Name
+func (p *sysProcess) String() string {
+	return p.name
 }
 
-type ProcessSet struct {
-	processes []*Process
+type processSet struct {
 	started   bool
+	processes []Process
 }
 
-func NewProcessSet(processes ...*Process) *ProcessSet {
-	return &ProcessSet{processes: processes}
+func NewProcessSet(processes ...Process) Process {
+	return &processSet{processes: processes}
 }
 
-func (ps *ProcessSet) Start() error {
+func (ps *processSet) Start() error {
 	if ps.Started() {
 		return errors.New("procker: already started")
 	}
@@ -94,7 +111,7 @@ func (ps *ProcessSet) Start() error {
 	return err
 }
 
-func (ps *ProcessSet) Wait() error {
+func (ps *processSet) Wait() error {
 	if !ps.Started() {
 		return errors.New("procker: not started")
 	}
@@ -106,7 +123,7 @@ func (ps *ProcessSet) Wait() error {
 	return err
 }
 
-func (ps *ProcessSet) Kill() error {
+func (ps *processSet) Kill() error {
 	if !ps.Started() {
 		return errors.New("procker: not started")
 	}
@@ -118,6 +135,6 @@ func (ps *ProcessSet) Kill() error {
 	return err
 }
 
-func (ps *ProcessSet) Started() bool {
+func (ps *processSet) Started() bool {
 	return ps.started
 }

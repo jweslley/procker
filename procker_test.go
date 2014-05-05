@@ -17,11 +17,7 @@ func TestProcessStart(t *testing.T) {
 	stdErr := &bytes.Buffer{}
 	var env []string
 
-	p := NewProcess("simple", "echo -n procker")
-	p.Dir = ""
-	p.Env = env
-	p.Stdout = stdOut
-	p.Stderr = stdErr
+	p := NewProcess("simple", "echo -n procker", "", env, stdOut, stdErr)
 	err := p.Start()
 
 	if err != nil {
@@ -40,13 +36,11 @@ func TestProcessStart(t *testing.T) {
 func TestProcessStartUsingEnv(t *testing.T) {
 	stdOut := &bytes.Buffer{}
 	stdErr := &bytes.Buffer{}
-	var env []string = []string{"PROCKER_MSG=hello", "PROCKER_MSG2=world"}
+	env := []string{"PROCKER_MSG=hello", "PROCKER_MSG2=world"}
 
-	p := NewProcess("simple", "echo -n $PROCKER_MSG $PROCKER_MSG2")
-	p.Dir = ""
-	p.Env = env
-	p.Stdout = stdOut
-	p.Stderr = stdErr
+	p := NewProcess("simple",
+		"echo -n $PROCKER_MSG $PROCKER_MSG2",
+		"", env, stdOut, stdErr)
 	err := p.Start()
 
 	if err != nil {
@@ -67,11 +61,7 @@ func TestProcessStartUsingWithCustomDir(t *testing.T) {
 	stdErr := &bytes.Buffer{}
 	var env []string
 
-	p := NewProcess("cat", "cat README.md")
-	p.Dir = "./test"
-	p.Env = env
-	p.Stdout = stdOut
-	p.Stderr = stdErr
+	p := NewProcess("cat", "cat README.md", "./test", env, stdOut, stdErr)
 	err := p.Start()
 
 	if err != nil {
@@ -92,11 +82,7 @@ func TestProcessCantBeStartTwice(t *testing.T) {
 	stdErr := &bytes.Buffer{}
 	var env []string
 
-	p := NewProcess("cat", "cat README.md")
-	p.Dir = "./test"
-	p.Env = env
-	p.Stdout = stdOut
-	p.Stderr = stdErr
+	p := NewProcess("cat", "cat README.md", "./test", env, stdOut, stdErr)
 	err := p.Start()
 
 	if err != nil {
@@ -110,37 +96,11 @@ func TestProcessCantBeStartTwice(t *testing.T) {
 }
 
 func TestProcessWaitOnlyStarted(t *testing.T) {
-	p := NewProcess("cat", "cat README.md")
+	p := NewProcess("cat", "cat README.md", "", nil, nil, nil)
 	err := p.Wait()
 
 	if err == nil {
 		t.Fatal("not started")
-	}
-}
-
-func TestProcessPid(t *testing.T) {
-	stdOut := &bytes.Buffer{}
-	stdErr := &bytes.Buffer{}
-	var env []string
-
-	p := NewProcess("cat", "cat README.md")
-	p.Dir = "./test"
-	p.Env = env
-	p.Stdout = stdOut
-	p.Stderr = stdErr
-
-	if p.Pid() != 0 {
-		t.Error("already started")
-	}
-
-	err := p.Start()
-	if err != nil {
-		t.Fatal("process failed")
-	}
-
-	err = p.Wait()
-	if p.Pid() == 0 {
-		t.Error("not started")
 	}
 }
 
@@ -149,11 +109,10 @@ func TestProcessKill(t *testing.T) {
 	stdErr := &bytes.Buffer{}
 	var env []string
 
-	p := NewProcess("lazyecho", "sh test/lazyecho.sh 5 procker")
-	p.Dir = ""
-	p.Env = env
-	p.Stdout = stdOut
-	p.Stderr = stdErr
+	p := NewProcess("lazyecho",
+		"sh test/lazyecho.sh 5 procker",
+		"", env, stdOut, stdErr)
+
 	err := p.Start()
 
 	if err != nil {
