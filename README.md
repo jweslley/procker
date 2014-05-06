@@ -4,6 +4,17 @@ Manage processes easily.
 
 **Work in progress**
 
+## Roadmap
+
+- [ ] subcommands
+- [ ] load system env vars
+- [ ] port settings using env var PORT
+- [ ] colored output
+- [ ] graceful shutdown
+- [ ] process's observers
+- [ ] background daemon!?
+- [ ] file-based configuration (./.procker and ~/.procker)
+
 
 ## Bugs and Feedback
 
