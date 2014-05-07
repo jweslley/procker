@@ -12,12 +12,17 @@ import (
 	"github.com/jweslley/procker"
 )
 
-const programName = "procker"
+var cmdStart = &command{
+	desc: "sss",
+	help: `
+	
+	`,
+	call: start}
 
-func main() {
+func start(args []string) {
 	procfile := flag.String("f", "Procfile", "Procfile declaring commands to run")
 	envfile := flag.String("e", ".env", "File containing environment variables to be used")
-	flag.Parse()
+	flag.CommandLine.Parse(args)
 
 	procSpecs := parseProfile(*procfile)
 	env := parseEnv(*envfile)

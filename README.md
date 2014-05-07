@@ -6,7 +6,7 @@ Manage processes easily.
 
 ## Roadmap
 
-- [ ] subcommands
+- [x] subcommands
 - [ ] load system env vars
 - [ ] port settings using env var PORT
 - [ ] colored output
