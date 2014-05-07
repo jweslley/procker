@@ -11,7 +11,7 @@ const programVersion = "0.0.1"
 type command struct {
 	desc string
 	help string
-	call func([]string)
+	exec func([]string)
 }
 
 var commands = make(map[string]*command)
@@ -29,7 +29,7 @@ func main() {
 	}
 
 	command := findCommand(os.Args[1])
-	command.call(os.Args[2:])
+	command.exec(os.Args[2:])
 }
 
 func findCommand(name string) *command {

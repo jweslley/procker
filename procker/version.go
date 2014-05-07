@@ -7,7 +7,7 @@ var cmdVersion = &command{
 	help: `Usage: procker version
 
 Display current version`,
-	call: version}
+	exec: version}
 
 func version(args []string) {
 	fmt.Printf("%s version %s\n", programName, programVersion)

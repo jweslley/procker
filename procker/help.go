@@ -10,7 +10,7 @@ var cmdHelp = &command{
 	help: `Usage: procker help [command]
 
 Help shows usage for a command.`,
-	call: help}
+	exec: help}
 
 func help(args []string) {
 	if len(args) == 0 {

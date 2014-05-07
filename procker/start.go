@@ -17,7 +17,7 @@ var cmdStart = &command{
 	help: `
 	
 	`,
-	call: start}
+	exec: start}
 
 func start(args []string) {
 	procfile := flag.String("f", "Procfile", "Procfile declaring commands to run")
