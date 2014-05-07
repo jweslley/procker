@@ -28,14 +28,17 @@ func main() {
 		os.Exit(1)
 	}
 
-	cmdName := os.Args[1]
-	command, ok := commands[cmdName]
+	command := findCommand(os.Args[1])
+	command.call(os.Args[2:])
+}
+
+func findCommand(name string) *command {
+	c, ok := commands[name]
 	if !ok {
-		fmt.Fprintf(os.Stderr, "procker: '%s' is not a procker command. See 'procker help'.\n", cmdName)
+		fmt.Fprintf(os.Stderr, "procker: '%s' is not a procker command. See 'procker help'.\n", name)
 		os.Exit(1)
 	}
-
-	command.call(os.Args[2:])
+	return c
 }
 
 func usage() {

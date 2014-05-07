@@ -18,12 +18,6 @@ func help(args []string) {
 		os.Exit(0)
 	}
 
-	cmdName := args[0]
-	command, ok := commands[cmdName]
-	if !ok {
-		fmt.Fprintf(os.Stderr, "procker: '%s' is not a procker command. See 'procker help'.\n", cmdName)
-		os.Exit(1)
-	}
-
+	command := findCommand(args[0])
 	fmt.Println(command.help)
 }
