@@ -7,7 +7,7 @@ Manage processes easily.
 ## Roadmap
 
 - [x] subcommands
-- [ ] port settings using env var PORT
+- [x] port settings using env var PORT
 - [ ] colored output
 - [ ] graceful shutdown
 - [ ] process's observers

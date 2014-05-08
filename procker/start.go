@@ -22,13 +22,14 @@ var cmdStart = &command{
 func start(args []string) {
 	procfile := flag.String("f", "Procfile", "Procfile declaring commands to run")
 	envfile := flag.String("e", ".env", "File containing environment variables to be used")
+	basePort := flag.Int("p", 5000, "Base port to be used by processes. Should be a multiple of 1000")
 	flag.CommandLine.Parse(args)
 
 	procSpecs := parseProfile(*procfile)
 	env := parseEnv(*envfile)
 	dir := path.Dir(*procfile)
 	padding := longestName(procSpecs)
-	process := buildProcess(procSpecs, dir, env, padding)
+	process := buildProcess(procSpecs, dir, env, *basePort, padding)
 
 	log.SetOutput(procker.NewPrefixedWriter(os.Stdout, prefix(programName, padding)))
 	c := make(chan os.Signal, 1)
@@ -54,14 +55,18 @@ func buildProcess(
 	specs map[string]string,
 	dir string,
 	env []string,
+	basePort int,
 	padding int) procker.Process {
 
+	i := 0
 	p := []procker.Process{}
 	for name, command := range specs {
-		process := procker.NewProcess(name, command, dir, env,
+		port := fmt.Sprintf("PORT=%d", basePort+(i*100))
+		process := procker.NewProcess(name, command, dir, append(env, port),
 			procker.NewPrefixedWriter(os.Stdout, prefix(name, padding)),
 			procker.NewPrefixedWriter(os.Stderr, prefix(name, padding)))
 		p = append(p, process)
+		i += 1
 	}
 	return procker.NewProcessSet(p...)
 }
