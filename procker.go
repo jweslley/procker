@@ -67,13 +67,6 @@ func (p *sysProcess) Kill() error {
 	return p.cmd.Process.Kill()
 }
 
-func (p *sysProcess) Pid() int {
-	if !p.Started() {
-		return 0
-	}
-	return p.cmd.Process.Pid
-}
-
 func (p *sysProcess) Started() bool {
 	return p.cmd != nil
 }
