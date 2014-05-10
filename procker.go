@@ -96,12 +96,10 @@ func (ps *processSet) Start() error {
 		return errors.New("procker: already started")
 	}
 
-	var err error
-	for _, process := range ps.processes {
-		err = process.Start()
-	}
 	ps.started = true
-	return err
+	return ps.each(func(p Process) error {
+		return p.Start()
+	})
 }
 
 func (ps *processSet) Wait() error {
@@ -109,11 +107,9 @@ func (ps *processSet) Wait() error {
 		return errors.New("procker: not started")
 	}
 
-	var err error
-	for _, process := range ps.processes {
-		err = process.Wait()
-	}
-	return err
+	return ps.each(func(p Process) error {
+		return p.Wait()
+	})
 }
 
 func (ps *processSet) Kill() error {
@@ -121,13 +117,19 @@ func (ps *processSet) Kill() error {
 		return errors.New("procker: not started")
 	}
 
-	var err error
-	for _, process := range ps.processes {
-		err = process.Kill()
-	}
-	return err
+	return ps.each(func(p Process) error {
+		return p.Kill()
+	})
 }
 
 func (ps *processSet) Started() bool {
 	return ps.started
+}
+
+func (ps *processSet) each(f func(p Process) error) error {
+	var err error
+	for _, process := range ps.processes {
+		err = f(process)
+	}
+	return err
 }
