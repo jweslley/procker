@@ -16,12 +16,13 @@ type command struct {
 	flag *flag.FlagSet
 }
 
-var commands = make(map[string]*command)
+var commands map[string]*command
 
 func init() {
-	commands["start"] = cmdStart
-	commands["version"] = cmdVersion
-	commands["help"] = cmdHelp
+	commands = map[string]*command{
+		"start":   cmdStart,
+		"version": cmdVersion,
+		"help":    cmdHelp}
 }
 
 func main() {
