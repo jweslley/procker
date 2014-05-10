@@ -21,6 +21,7 @@ var commands map[string]*command
 func init() {
 	commands = map[string]*command{
 		"start":   cmdStart,
+		"run":     cmdRun,
 		"version": cmdVersion,
 		"help":    cmdHelp}
 }
@@ -39,8 +40,7 @@ func main() {
 func findCommand(name string) *command {
 	c, ok := commands[name]
 	if !ok {
-		fmt.Fprintf(os.Stderr, "procker: '%s' is not a procker command. See 'procker help'.\n", name)
-		os.Exit(1)
+		fail("procker: '%s' is not a procker command. See 'procker help'.\n", name)
 	}
 	if c.flag == nil {
 		c.flag = flag.NewFlagSet(name, flag.ExitOnError)
@@ -56,4 +56,15 @@ Available commands:`)
 		fmt.Printf("%10s  %s\n", name, command.desc)
 	}
 	fmt.Println("\nRun 'procker help [command]' for details.")
+}
+
+func fail(format string, a ...interface{}) {
+	fmt.Fprintf(os.Stderr, format, a...)
+	os.Exit(1)
+}
+
+func failIf(e error) {
+	if e != nil {
+		fail("%s\n", e.Error())
+	}
 }

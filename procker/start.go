@@ -14,7 +14,7 @@ import (
 
 var (
 	cmdStart = &command{
-		desc: "Start processes",
+		desc: "Start application's processes",
 		help: `Usage: procker start [options]
 
 Start the processes specified by a Procfile
@@ -24,21 +24,21 @@ Available options:`,
 		flag: startFlags}
 
 	// flags
-	startFlags = flag.NewFlagSet("start", flag.ExitOnError)
-	procfile   = startFlags.String("f", "Procfile",
+	startFlags    = flag.NewFlagSet("start", flag.ExitOnError)
+	startProcfile = startFlags.String("f", "Procfile",
 		"Procfile declaring commands to run")
-	envfile = startFlags.String("e", ".env",
+	startEnvfile = startFlags.String("e", ".env",
 		"File containing environment variables to be used")
-	basePort = startFlags.Int("p", 5000,
+	startBasePort = startFlags.Int("p", 5000,
 		"Base port to be used by processes. Should be a multiple of 1000")
 )
 
 func start(args []string) {
-	procSpecs := parseProfile(*procfile)
-	env := parseEnv(*envfile)
-	dir := path.Dir(*procfile)
+	procSpecs := parseProfile(*startProcfile)
+	env := parseEnv(*startEnvfile)
+	dir := path.Dir(*startProcfile)
 	padding := longestName(procSpecs)
-	process := buildProcess(procSpecs, dir, env, *basePort, padding)
+	process := buildProcess(procSpecs, dir, env, *startBasePort, padding)
 
 	log.SetOutput(procker.NewPrefixedWriter(os.Stdout, prefix(programName, padding)))
 	c := make(chan os.Signal, 1)
