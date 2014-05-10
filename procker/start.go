@@ -12,19 +12,28 @@ import (
 	"github.com/jweslley/procker"
 )
 
-var cmdStart = &command{
-	desc: "sss",
-	help: `
-	
-	`,
-	exec: start}
+var (
+	cmdStart = &command{
+		desc: "Start processes",
+		help: `Usage: procker start [options]
+
+Start the processes specified by a Procfile
+
+Available options:`,
+		exec: start,
+		flag: startFlags}
+
+	// flags
+	startFlags = flag.NewFlagSet("start", flag.ExitOnError)
+	procfile   = startFlags.String("f", "Procfile",
+		"Procfile declaring commands to run")
+	envfile = startFlags.String("e", ".env",
+		"File containing environment variables to be used")
+	basePort = startFlags.Int("p", 5000,
+		"Base port to be used by processes. Should be a multiple of 1000")
+)
 
 func start(args []string) {
-	procfile := flag.String("f", "Procfile", "Procfile declaring commands to run")
-	envfile := flag.String("e", ".env", "File containing environment variables to be used")
-	basePort := flag.Int("p", 5000, "Base port to be used by processes. Should be a multiple of 1000")
-	flag.CommandLine.Parse(args)
-
 	procSpecs := parseProfile(*procfile)
 	env := parseEnv(*envfile)
 	dir := path.Dir(*procfile)

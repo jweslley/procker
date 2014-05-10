@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
 )
@@ -12,6 +13,7 @@ type command struct {
 	desc string
 	help string
 	exec func([]string)
+	flag *flag.FlagSet
 }
 
 var commands = make(map[string]*command)
@@ -29,7 +31,8 @@ func main() {
 	}
 
 	command := findCommand(os.Args[1])
-	command.exec(os.Args[2:])
+	command.flag.Parse(os.Args[2:])
+	command.exec(command.flag.Args())
 }
 
 func findCommand(name string) *command {
@@ -37,6 +40,9 @@ func findCommand(name string) *command {
 	if !ok {
 		fmt.Fprintf(os.Stderr, "procker: '%s' is not a procker command. See 'procker help'.\n", name)
 		os.Exit(1)
+	}
+	if c.flag == nil {
+		c.flag = flag.NewFlagSet(name, flag.ExitOnError)
 	}
 	return c
 }

@@ -20,4 +20,5 @@ func help(args []string) {
 
 	command := findCommand(args[0])
 	fmt.Println(command.help)
+	command.flag.PrintDefaults()
 }
