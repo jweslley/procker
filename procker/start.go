@@ -12,6 +12,8 @@ import (
 	"github.com/jweslley/procker"
 )
 
+const defaultEnvfile = ".env"
+
 var (
 	cmdStart = &command{
 		desc: "Start application's processes",
@@ -27,7 +29,7 @@ Available options:`,
 	startFlags    = flag.NewFlagSet("start", flag.ExitOnError)
 	startProcfile = startFlags.String("f", "Procfile",
 		"Procfile declaring commands to run")
-	startEnvfile = startFlags.String("e", ".env",
+	startEnvfile = startFlags.String("e", defaultEnvfile,
 		"File containing environment variables to be used")
 	startBasePort = startFlags.Int("p", 5000,
 		"Base port to be used by processes. Should be a multiple of 1000")
@@ -38,9 +40,9 @@ func start(args []string) {
 	env := parseEnv(*startEnvfile)
 	dir := path.Dir(*startProcfile)
 	padding := longestName(procSpecs)
+	log.SetOutput(procker.NewPrefixedWriter(os.Stdout, prefix(programName, padding)))
 	process := buildProcess(procSpecs, dir, env, *startBasePort, padding)
 
-	log.SetOutput(procker.NewPrefixedWriter(os.Stdout, prefix(programName, padding)))
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
@@ -51,13 +53,11 @@ func start(args []string) {
 		}
 	}()
 
-	log.Printf("starting processes")
 	err := process.Start()
-	log.Printf("error on start %s", err)
+	failIf(err)
 
-	log.Printf("waiting processes")
 	err = process.Wait()
-	log.Printf("error on wait %s", err)
+	failIf(err)
 }
 
 func buildProcess(
@@ -70,40 +70,44 @@ func buildProcess(
 	i := 0
 	p := []procker.Process{}
 	for name, command := range specs {
-		port := fmt.Sprintf("PORT=%d", basePort+(i*100))
-		process := procker.NewProcess(name, command, dir, append(env, port),
+		port := basePort + (i * 100)
+		process := procker.NewProcess(name,
+			command,
+			dir,
+			append(env, fmt.Sprintf("PORT=%d", port)),
 			procker.NewPrefixedWriter(os.Stdout, prefix(name, padding)),
 			procker.NewPrefixedWriter(os.Stderr, prefix(name, padding)))
 		p = append(p, process)
-		i += 1
+		i++
+
+		log.Printf("starting %s on port %d", name, port)
 	}
 	return procker.NewProcessSet(p...)
 }
 
 func parseProfile(filepath string) map[string]string {
 	file, err := os.Open(filepath)
-	if err != nil {
-		log.Fatalf("procker: %v", err)
-	}
 	defer file.Close()
+	failIf(err)
 
 	processes, err := procker.ParseProcfile(file)
-	if err != nil {
-		log.Fatalf("procker: %v", err)
-	}
+	failIf(err)
 	return processes
 }
 
 func parseEnv(filepath string) []string {
 	file, err := os.Open(filepath)
+	defer file.Close()
 	if err != nil {
-		return []string{}
+		if filepath == defaultEnvfile {
+			return []string{}
+		} else {
+			failIf(err)
+		}
 	}
 
 	env, err := procker.ParseEnv(file)
-	if err != nil {
-		log.Fatalf("procker: %v", err)
-	}
+	failIf(err)
 	return env
 }
 

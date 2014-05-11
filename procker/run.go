@@ -21,13 +21,13 @@ Available options:`,
 
 	// flags
 	runFlags   = flag.NewFlagSet("run", flag.ExitOnError)
-	runEnvfile = runFlags.String("e", ".env",
+	runEnvfile = runFlags.String("e", defaultEnvfile,
 		"File containing environment variables to be used")
 )
 
 func run(args []string) {
 	if len(args) == 0 {
-		fail("procker: you must specify a command. See 'procker help run'.\n")
+		fail("you must specify a command. See 'procker help run'.\n")
 	}
 
 	env := parseEnv(*runEnvfile)

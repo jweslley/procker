@@ -40,7 +40,7 @@ func main() {
 func findCommand(name string) *command {
 	c, ok := commands[name]
 	if !ok {
-		fail("procker: '%s' is not a procker command. See 'procker help'.\n", name)
+		fail("'%s' is not a procker command. See 'procker help'.\n", name)
 	}
 	if c.flag == nil {
 		c.flag = flag.NewFlagSet(name, flag.ExitOnError)
@@ -59,7 +59,7 @@ Available commands:`)
 }
 
 func fail(format string, a ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, a...)
+	fmt.Fprintf(os.Stderr, "procker: "+format, a...)
 	os.Exit(1)
 }
 
