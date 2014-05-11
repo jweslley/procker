@@ -1,18 +1,40 @@
 # Procker
 
-Manage processes easily.
+Procker is a tool for managing Procfile-based applications.
 
-**Work in progress**
+Also, Procker can be used as a library to build other applications which require process's management.
 
-## Roadmap
 
-- [x] subcommands
-- [x] port settings using env var PORT
-- [ ] colored output
-- [ ] graceful shutdown
-- [ ] process's observers
-- [ ] background daemon!?
-- [ ] file-based configuration (./.procker and ~/.procker)
+## Installation
+
+    go get github.com/jweslley/procker
+    make
+
+
+## Getting started
+
+1. Write a `Procfile`
+2. *Optional:* write a `.env` file
+3. Run the app using `procker`:
+
+    procker start
+
+For more information, use `procker help`.
+
+
+## Resources
+
+* [Procfile](https://devcenter.heroku.com/articles/procfile)
+* [Store config in the environment](http://www.12factor.net/config)
+
+
+## Alternatives
+
+* [foreman](https://github.com/ddollar/foreman)
+* [forego](https://github.com/ddollar/forego)
+* [shoreman](https://github.com/hecticjeff/shoreman)
+* [honcho](https://github.com/nickstenning/honcho)
+* [norman](https://github.com/josh/norman)
 
 
 ## Bugs and Feedback
