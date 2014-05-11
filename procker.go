@@ -8,10 +8,20 @@ import (
 	"strings"
 )
 
+// Process manages process's lifecycle.
 type Process interface {
+	// Start starts the process but does not wait for it to complete.
 	Start() error
+
+	// Wait waits for the command to exit.
+	// It must have been started by Start.
 	Wait() error
+
+	// Kill causes the Process to exit immediately.
+	// It must have been started by Start.
 	Kill() error
+
+	// Started reports whether the process was started.
 	Started() bool
 }
 
@@ -25,6 +35,7 @@ type sysProcess struct {
 	cmd     *exec.Cmd
 }
 
+// NewProcess creates a new process with the specified arguments.
 func NewProcess(
 	name, command, dir string,
 	env []string,
@@ -87,6 +98,7 @@ type processSet struct {
 	processes []Process
 }
 
+// NewProcessSet creates a process which controls other processes.
 func NewProcessSet(processes ...Process) Process {
 	return &processSet{processes: processes}
 }
