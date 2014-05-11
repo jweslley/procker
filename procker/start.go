@@ -64,23 +64,21 @@ func buildProcess(
 	specs map[string]string,
 	dir string,
 	env []string,
-	basePort int,
+	port int,
 	padding int) procker.Process {
 
-	i := 0
 	p := []procker.Process{}
 	for name, command := range specs {
-		port := basePort + (i * 100)
 		process := procker.NewProcess(name,
 			command,
 			dir,
 			append(env, fmt.Sprintf("PORT=%d", port)),
 			procker.NewPrefixedWriter(os.Stdout, prefix(name, padding)),
 			procker.NewPrefixedWriter(os.Stderr, prefix(name, padding)))
-		p = append(p, process)
-		i++
 
 		log.Printf("starting %s on port %d", name, port)
+		p = append(p, process)
+		port++
 	}
 	return procker.NewProcessSet(p...)
 }
