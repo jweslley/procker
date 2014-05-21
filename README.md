@@ -1,5 +1,7 @@
 # Procker
 
+[![Travis](https://api.travis-ci.org/jweslley/procker.png)](http://travis-ci.org/jweslley/procker)
+
 Procker is a tool for managing Procfile-based applications.
 
 Also, Procker can be used as a library to build other applications which require process's management.
