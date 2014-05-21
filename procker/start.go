@@ -85,8 +85,8 @@ func buildProcess(
 
 func parseProfile(filepath string) map[string]string {
 	file, err := os.Open(filepath)
-	defer file.Close()
 	failIf(err)
+	defer file.Close()
 
 	processes, err := procker.ParseProcfile(file)
 	failIf(err)
@@ -95,7 +95,6 @@ func parseProfile(filepath string) map[string]string {
 
 func parseEnv(filepath string) []string {
 	file, err := os.Open(filepath)
-	defer file.Close()
 	if err != nil {
 		if filepath == defaultEnvfile {
 			return []string{}
@@ -103,6 +102,7 @@ func parseEnv(filepath string) []string {
 			failIf(err)
 		}
 	}
+	defer file.Close()
 
 	env, err := procker.ParseEnv(file)
 	failIf(err)
