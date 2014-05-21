@@ -1,4 +1,5 @@
-all: install
+all:
+	go test -v ./...
 
 install:
 	go install ./...
