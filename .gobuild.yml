@@ -2,9 +2,10 @@ filesets:
   includes:
   - README.md
   - LICENSE
+  - bin
   excludes:
   - .*.go
 settings:
-  targetdir: "."
+  targetdir: "bin"
   addopts: "./procker/..."
   yaml"cgoenable": false
