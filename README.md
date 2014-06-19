@@ -9,8 +9,7 @@ Also, Procker can be used as a library to build other applications which require
 
 ## Installation
 
-    go get github.com/jweslley/procker
-    make
+Just [download](http://beta.gobuild.io/github.com/jweslley/procker) it and extract the binary to somewhere in your path.
 
 
 ## Getting started
@@ -19,7 +18,7 @@ Also, Procker can be used as a library to build other applications which require
 2. *Optional:* write a `.env` file
 3. Run the app using `procker`:
 
-    procker start
+        procker start
 
 For more information, use `procker help`.
 
