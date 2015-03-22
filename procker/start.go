@@ -48,7 +48,7 @@ func start(args []string) {
 	go func() {
 		for sig := range c {
 			log.Printf("%v received, stopping processes and exiting.", sig)
-			process.Kill()
+			process.Stop(1000)
 			os.Exit(1)
 		}
 	}()
@@ -69,7 +69,7 @@ func buildProcess(
 
 	p := []procker.Process{}
 	for name, command := range specs {
-		process := procker.NewProcess(name,
+		process := procker.NewProcess(
 			command,
 			dir,
 			append(env, fmt.Sprintf("PORT=%d", port)),
@@ -80,7 +80,7 @@ func buildProcess(
 		p = append(p, process)
 		port++
 	}
-	return procker.NewProcessSet(p...)
+	return procker.NewProcessGroup(p...)
 }
 
 func parseProfile(filepath string) map[string]string {

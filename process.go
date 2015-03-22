@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -27,7 +28,7 @@ type Process interface {
 	signal(os.Signal) error
 
 	// Wait waits for the command to exit.
-	wait() error
+	Wait() error
 }
 
 type sysProcess struct {
@@ -95,7 +96,7 @@ func (p *sysProcess) signal(sig os.Signal) error {
 	return p.cmd.Process.Signal(sig)
 }
 
-func (p *sysProcess) wait() error {
+func (p *sysProcess) Wait() error {
 	if !p.Running() {
 		return errors.New("procker: not started")
 	}
@@ -159,13 +160,13 @@ func (pg *processGroup) signal(sig os.Signal) error {
 	})
 }
 
-func (pg *processGroup) wait() error {
+func (pg *processGroup) Wait() error {
 	if !pg.Running() {
 		return errors.New("procker: not started")
 	}
 
 	return pg.each(func(p Process) error {
-		return p.wait()
+		return p.Wait()
 	})
 }
 
@@ -173,10 +174,16 @@ func (pg *processGroup) Running() bool {
 	return pg.running
 }
 
-func (pg *processGroup) each(func(p Process) error) error {
+func (pg *processGroup) each(f func(p Process) error) error {
 	var err error
-	//for _, process := range pg.processes {
-	//err = f(process)
-	//}
+	var wg sync.WaitGroup
+	for _, process := range pg.processes {
+		wg.Add(1)
+		go func(p Process) {
+			err = f(p)
+			wg.Done()
+		}(process)
+	}
+	wg.Wait()
 	return err
 }

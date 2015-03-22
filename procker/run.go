@@ -32,8 +32,7 @@ func run(args []string) {
 
 	env := parseEnv(*runEnvfile)
 	command := strings.Join(args, " ")
-	process := procker.NewProcess("run", command, "",
-		env, os.Stdout, os.Stderr)
+	process := procker.NewProcess(command, "", env, os.Stdout, os.Stderr)
 
 	err := process.Start()
 	failIf(err)

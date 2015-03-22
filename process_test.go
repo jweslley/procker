@@ -25,7 +25,7 @@ func TestProcessStart(t *testing.T) {
 		t.Fatal("process failed")
 	}
 
-	err = p.wait()
+	err = p.Wait()
 	if err != nil {
 		t.Fatal("process failed")
 	}
@@ -47,7 +47,7 @@ func TestProcessStartUsingEnv(t *testing.T) {
 		t.Fatal("process failed")
 	}
 
-	err = p.wait()
+	err = p.Wait()
 	if err != nil {
 		t.Fatal("process failed")
 	}
@@ -68,7 +68,7 @@ func TestProcessStartUsingWithCustomDir(t *testing.T) {
 		t.Fatal("process failed")
 	}
 
-	err = p.wait()
+	err = p.Wait()
 	if err != nil {
 		t.Fatal("process failed")
 	}
@@ -115,7 +115,7 @@ func TestProcessCanRunMultipleTimes(t *testing.T) {
 			t.Fatal("process failed")
 		}
 
-		err = p.wait()
+		err = p.Wait()
 		if err != nil {
 			t.Fatal("process failed")
 		}
@@ -131,7 +131,7 @@ func TestProcessCanRunMultipleTimes(t *testing.T) {
 
 func TestProcessWaitOnlyStarted(t *testing.T) {
 	p := NewProcess("cat README.md", "", nil, nil, nil)
-	err := p.wait()
+	err := p.Wait()
 
 	if err == nil {
 		t.Fatal("not started")
@@ -151,7 +151,7 @@ func TestProcessStop(t *testing.T) {
 	}
 
 	go func() {
-		erw := p.wait()
+		erw := p.Wait()
 		if erw == nil {
 			t.Fatalf("not stopped")
 		}
@@ -181,7 +181,7 @@ func TestProcessForceStopIfTimeoutExpires(t *testing.T) {
 	finished := make(chan bool)
 	go func() {
 		started <- true
-		erw := p.wait()
+		erw := p.Wait()
 		if erw == nil {
 			t.Fatalf("not stopped")
 		}
