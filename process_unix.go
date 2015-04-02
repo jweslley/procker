@@ -7,14 +7,14 @@ import (
 	"time"
 )
 
-func (p *sysProcess) stop(timeout time.Duration) error {
-	p.signal(syscall.SIGTERM)
+func (p *SysProcess) stop(timeout time.Duration) error {
+	p.Signal(syscall.SIGTERM)
 
 	select {
 	case err := <-p.errc:
 		return err
 	case <-time.After(timeout):
-		return p.signal(syscall.SIGKILL)
+		return p.Signal(syscall.SIGKILL)
 	}
 
 	return nil

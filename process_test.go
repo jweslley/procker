@@ -2,6 +2,7 @@ package procker
 
 import (
 	"bytes"
+	"io"
 	"reflect"
 	"testing"
 	"time"
@@ -11,6 +12,10 @@ func assert(t *testing.T, expected, actual interface{}) {
 	if !reflect.DeepEqual(expected, actual) {
 		t.Errorf("expected: %+v, actual: %+v", expected, actual)
 	}
+}
+
+func NewProcess(cmd, dir string, env []string, out, err io.Writer) Process {
+	return &SysProcess{Command: cmd, Dir: dir, Env: env, Stdout: out, Stderr: err}
 }
 
 func TestProcessStart(t *testing.T) {

@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -25,49 +26,47 @@ type Process interface {
 	Running() bool
 
 	// Signal sends a signal to the Process.
-	signal(os.Signal) error
+	Signal(os.Signal) error
 
 	// Wait waits for the command to exit.
 	Wait() error
 }
 
-type sysProcess struct {
-	command string
-	dir     string
-	env     []string
-	stdout  io.Writer
-	stderr  io.Writer
-	cmd     *exec.Cmd
-	errc    chan error
+// SysProcess represents an external command.
+// Please check exec.Cmd for more information about exported fields.
+type SysProcess struct {
+	Command     string
+	Dir         string
+	Env         []string
+	Stdin       io.Reader
+	Stdout      io.Writer
+	Stderr      io.Writer
+	ExtraFiles  []*os.File
+	SysProcAttr *syscall.SysProcAttr
+
+	cmd  *exec.Cmd
+	errc chan error
 }
 
-// NewProcess creates a new process with the specified arguments.
-func NewProcess(
-	command, dir string,
-	env []string,
-	stdout, stderr io.Writer) Process {
-
-	return &sysProcess{
-		command: command,
-		dir:     dir,
-		env:     env,
-		stdout:  stdout,
-		stderr:  stderr,
-		errc:    make(chan error),
-	}
-}
-
-func (p *sysProcess) Start() error {
+func (p *SysProcess) Start() error {
 	if p.Running() {
 		return errors.New("procker: already started")
 	}
 
-	args := strings.Fields(p.expandedCmd(p.env))
+	args := strings.Fields(p.expandedCmd())
 	p.cmd = exec.Command(args[0], args[1:]...)
-	p.cmd.Dir = p.dir
-	p.cmd.Env = p.env
-	p.cmd.Stdout = p.stdout
-	p.cmd.Stderr = p.stderr
+	p.cmd.Dir = p.Dir
+	p.cmd.Env = p.Env
+	p.cmd.Stdin = p.Stdin
+	p.cmd.Stdout = p.Stdout
+	p.cmd.Stderr = p.Stderr
+	p.cmd.ExtraFiles = p.ExtraFiles
+	p.cmd.SysProcAttr = p.SysProcAttr
+
+	if p.errc == nil {
+		p.errc = make(chan error)
+	}
+
 	err := p.cmd.Start()
 	if err != nil {
 		return fmt.Errorf("procker: failed to start: %v", err)
@@ -80,7 +79,7 @@ func (p *sysProcess) Start() error {
 	return nil
 }
 
-func (p *sysProcess) Stop(timeout time.Duration) error {
+func (p *SysProcess) Stop(timeout time.Duration) error {
 	if !p.Running() {
 		return errors.New("procker: not started")
 	}
@@ -88,7 +87,7 @@ func (p *sysProcess) Stop(timeout time.Duration) error {
 	return p.stop(timeout)
 }
 
-func (p *sysProcess) signal(sig os.Signal) error {
+func (p *SysProcess) Signal(sig os.Signal) error {
 	if !p.Running() {
 		return errors.New("procker: not started")
 	}
@@ -96,7 +95,7 @@ func (p *sysProcess) signal(sig os.Signal) error {
 	return p.cmd.Process.Signal(sig)
 }
 
-func (p *sysProcess) Wait() error {
+func (p *SysProcess) Wait() error {
 	if !p.Running() {
 		return errors.New("procker: not started")
 	}
@@ -104,21 +103,22 @@ func (p *sysProcess) Wait() error {
 	return <-p.errc
 }
 
-func (p *sysProcess) Running() bool {
+func (p *SysProcess) Running() bool {
 	return p.cmd != nil
 }
 
-func (p *sysProcess) expandedCmd(env []string) string {
-	m := env2Map(env)
-	return os.Expand(p.command, func(name string) string {
+func (p *SysProcess) expandedCmd() string {
+	m := env2Map(p.Env)
+	return os.Expand(p.Command, func(name string) string {
 		return m[name]
 	})
 }
 
-func (p *sysProcess) String() string {
-	return p.command
+func (p *SysProcess) String() string {
+	return p.Command
 }
 
+// FIXME processGroup is too simplistic, needs improvements
 type processGroup struct {
 	running   bool
 	processes []Process
@@ -150,13 +150,13 @@ func (pg *processGroup) Stop(timeout time.Duration) error {
 	})
 }
 
-func (pg *processGroup) signal(sig os.Signal) error {
+func (pg *processGroup) Signal(sig os.Signal) error {
 	if !pg.Running() {
 		return errors.New("procker: not started")
 	}
 
 	return pg.each(func(p Process) error {
-		return p.signal(sig)
+		return p.Signal(sig)
 	})
 }
 

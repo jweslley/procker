@@ -5,6 +5,6 @@ import (
 	"time"
 )
 
-func (p *sysProcess) stop(timeout time.Duration) error {
-	return p.signal(syscall.SIGKILL)
+func (p *SysProcess) stop(timeout time.Duration) error {
+	return p.Signal(syscall.SIGKILL)
 }
