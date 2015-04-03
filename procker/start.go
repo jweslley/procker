@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"path"
 	"syscall"
+	"time"
 
 	"github.com/jweslley/procker"
 )
@@ -17,7 +18,7 @@ const defaultEnvfile = ".env"
 var (
 	cmdStart = &command{
 		desc: "Start application's processes",
-		help: `Usage: procker start [options]
+		help: `Usage: procker start [options] [process name]...
 
 Start the processes specified by a Procfile
 
@@ -32,55 +33,88 @@ Available options:`,
 	startEnvfile = startFlags.String("e", defaultEnvfile,
 		"File containing environment variables to be used")
 	startBasePort = startFlags.Int("p", 5000,
-		"Base port to be used by processes. Should be a multiple of 1000")
+		"Base port to be used by processes")
+	startStopTimeout = startFlags.Int("t", 5,
+		"Time (in seconds) for graceful stop of processes")
 )
 
 func start(args []string) {
-	procSpecs := parseProfile(*startProcfile)
+	processes := parseProfile(*startProcfile)
 	env := parseEnv(*startEnvfile)
 	dir := path.Dir(*startProcfile)
-	padding := longestName(procSpecs)
+	padding := longestName(processes)
 	log.SetOutput(procker.NewPrefixedWriter(os.Stdout, prefix(programName, padding)))
-	process := buildProcess(procSpecs, dir, env, *startBasePort, padding)
+	process := buildProcess(args, processes, dir, env, *startBasePort, padding)
 
 	c := make(chan os.Signal, 1)
-	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	signal.Notify(c, os.Interrupt)
 	go func() {
+		stopping := false
 		for sig := range c {
-			log.Printf("%v received, stopping processes and exiting.", sig)
-			process.Stop(1000)
-			os.Exit(1)
+			if stopping {
+				log.Printf("%v signal received, killing processes and exiting.", sig)
+				process.Signal(syscall.SIGKILL)
+			} else {
+				log.Printf("%v signal received, stopping processes and exiting.", sig)
+				stopping = true
+				go func() {
+					process.Stop(time.Duration(*startStopTimeout) * time.Second)
+				}()
+			}
 		}
 	}()
 
 	err := process.Start()
 	failIf(err)
 
-	err = process.Wait()
-	failIf(err)
+	process.Wait()
 }
 
 func buildProcess(
-	specs map[string]string,
+	processNames []string,
+	processes map[string]string,
 	dir string,
 	env []string,
-	port int,
-	padding int) procker.Process {
+	port, padding int) procker.Process {
 
 	p := []procker.Process{}
-	for name, command := range specs {
-		process := procker.NewProcess(
-			command,
-			dir,
-			append(env, fmt.Sprintf("PORT=%d", port)),
-			procker.NewPrefixedWriter(os.Stdout, prefix(name, padding)),
-			procker.NewPrefixedWriter(os.Stderr, prefix(name, padding)))
+	for name, command := range processes {
+		if !mustStart(processNames, name) {
+			continue
+		}
+
+		process := &procker.SysProcess{
+			Command:     command,
+			Dir:         dir,
+			Env:         append(env, fmt.Sprintf("PORT=%d", port)),
+			Stdout:      procker.NewPrefixedWriter(os.Stdout, prefix(name, padding)),
+			Stderr:      procker.NewPrefixedWriter(os.Stderr, prefix(name, padding)),
+			SysProcAttr: sysProcAttrs(),
+		}
 
 		log.Printf("starting %s on port %d", name, port)
 		p = append(p, process)
 		port++
 	}
+
+	if len(p) == 0 {
+		fail("no process to run\n")
+	}
+
 	return procker.NewProcessGroup(p...)
+}
+
+func mustStart(processNames []string, name string) bool {
+	if len(processNames) == 0 {
+		return true
+	}
+
+	for _, process := range processNames {
+		if process == name {
+			return true
+		}
+	}
+	return false
 }
 
 func parseProfile(filepath string) map[string]string {

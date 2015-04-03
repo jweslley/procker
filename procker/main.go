@@ -7,7 +7,7 @@ import (
 )
 
 const programName = "procker"
-const programVersion = "0.0.1"
+const programVersion = "0.1.0"
 
 type command struct {
 	desc string
@@ -23,7 +23,8 @@ func init() {
 		"start":   cmdStart,
 		"run":     cmdRun,
 		"version": cmdVersion,
-		"help":    cmdHelp}
+		"help":    cmdHelp,
+	}
 }
 
 func main() {

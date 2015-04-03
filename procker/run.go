@@ -32,11 +32,15 @@ func run(args []string) {
 
 	env := parseEnv(*runEnvfile)
 	command := strings.Join(args, " ")
-	process := procker.NewProcess(command, "", env, os.Stdout, os.Stderr)
+	process := &procker.SysProcess{
+		Command: command,
+		Env:     env,
+		Stdout:  os.Stdout,
+		Stderr:  os.Stderr,
+	}
 
 	err := process.Start()
 	failIf(err)
 
-	err = process.Wait()
-	failIf(err)
+	process.Wait()
 }
