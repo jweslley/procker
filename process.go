@@ -69,6 +69,7 @@ func (p *SysProcess) Start() error {
 
 	err := p.cmd.Start()
 	if err != nil {
+		p.cmd = nil
 		return fmt.Errorf("procker: failed to start: %v", err)
 	}
 
@@ -145,6 +146,7 @@ func (pg *processGroup) Stop(timeout time.Duration) error {
 		return errors.New("procker: not started")
 	}
 
+	defer func() { pg.running = false }()
 	return pg.each(func(p Process) error {
 		return p.Stop(timeout)
 	})
