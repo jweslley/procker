@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -53,10 +52,14 @@ func (p *SysProcess) Start() error {
 		return errors.New("procker: already started")
 	}
 
-	args := strings.Fields(p.expandedCmd())
-	p.cmd = exec.Command(args[0], args[1:]...)
+	cmd, err := NewShellCommand(p.expandedCmd())
+	if err != nil {
+		return fmt.Errorf("procker: invalid command: %s", err)
+	}
+
+	p.cmd = cmd
 	p.cmd.Dir = p.Dir
-	p.cmd.Env = p.Env
+	p.cmd.Env = append(p.cmd.Env, p.Env...)
 	p.cmd.Stdin = p.Stdin
 	p.cmd.Stdout = p.Stdout
 	p.cmd.Stderr = p.Stderr
@@ -67,7 +70,7 @@ func (p *SysProcess) Start() error {
 		p.errc = make(chan error)
 	}
 
-	err := p.cmd.Start()
+	err = p.cmd.Start()
 	if err != nil {
 		p.cmd = nil
 		return fmt.Errorf("procker: failed to start: %v", err)

@@ -5,8 +5,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"regexp"
 	"strings"
+
+	"github.com/flynn/go-shlex"
 )
 
 // PrefixedWriter implements prefixed output for an io.Writer object.
@@ -106,4 +109,31 @@ func env2Map(env []string) map[string]string {
 		}
 	}
 	return m
+}
+
+var envvarRegexp = regexp.MustCompile("^[a-zA-Z_][a-zA-Z0-9_]*=")
+
+// NewShellCommand creates a exec.Cmd based upon shell-style rules for
+// quoting, escaping, and spaces.
+//
+// It extracts environment variables specified at the start of
+// a command since Bourne-style shells allow it.
+func NewShellCommand(cmd string) (*exec.Cmd, error) {
+	args, err := shlex.Split(cmd)
+	if err != nil {
+		return nil, err
+	}
+
+	var env []string
+	for _, arg := range args {
+		if !envvarRegexp.MatchString(arg) {
+			break
+		}
+		env = append(env, arg)
+		args = args[1:]
+	}
+
+	c := exec.Command(args[0], args[1:]...)
+	c.Env = env
+	return c, nil
 }

@@ -8,6 +8,7 @@ install:
 	go install -v ./...
 
 deps:
+	go get ./...
 	go get github.com/gobuild/gobuild3/packer
 
 dist:
