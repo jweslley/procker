@@ -1,11 +1,13 @@
 BUILD_DIR=bin
 VERSION=0.1.0
 
-all:
-	go test -v ./...
+all: tests
 
 install:
 	go install -v ./...
+
+tests: deps
+	go test -v ./...
 
 deps:
 	go get ./...
