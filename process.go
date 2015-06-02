@@ -66,10 +66,7 @@ func (p *SysProcess) Start() error {
 	p.cmd.ExtraFiles = p.ExtraFiles
 	p.cmd.SysProcAttr = p.SysProcAttr
 
-	if p.errc == nil {
-		p.errc = make(chan error)
-	}
-
+	p.errc = make(chan error)
 	err = p.cmd.Start()
 	if err != nil {
 		p.cmd = nil
@@ -78,6 +75,7 @@ func (p *SysProcess) Start() error {
 
 	go func() {
 		p.errc <- p.cmd.Wait()
+		close(p.errc)
 		p.cmd = nil
 	}()
 	return nil

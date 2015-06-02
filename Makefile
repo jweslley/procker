@@ -13,6 +13,12 @@ deps:
 	go get ./...
 	go get github.com/gobuild/gobuild3/packer
 
+qa:
+	go vet
+	golint
+	go test -coverprofile=.cover~
+	go tool cover -html=.cover~
+
 dist:
 	packer --os linux  --arch amd64 --output procker-linux-amd64-$(VERSION).zip
 	packer --os linux  --arch 386   --output procker-linux-386-$(VERSION).zip

@@ -17,6 +17,4 @@ func (p *SysProcess) stop(timeout time.Duration) error {
 		p.Signal(syscall.SIGKILL)
 		return <-p.errc
 	}
-
-	return nil
 }

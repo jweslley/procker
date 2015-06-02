@@ -130,7 +130,7 @@ func TestProcessCanRunMultipleTimes(t *testing.T) {
 
 		stdOut.Reset()
 		stdErr.Reset()
-		i += 1
+		i++
 	}
 }
 
