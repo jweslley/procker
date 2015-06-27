@@ -43,6 +43,7 @@ func start(args []string) {
 	env := parseEnv(*startEnvfile)
 	dir := path.Dir(*startProcfile)
 	padding := longestName(processes)
+	log.SetFlags(0)
 	log.SetOutput(procker.NewPrefixedWriter(os.Stdout, prefix(programName, padding)))
 	process := buildProcess(args, processes, dir, env, *startBasePort, padding)
 
