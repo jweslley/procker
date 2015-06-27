@@ -35,6 +35,7 @@ func run(args []string) {
 	process := &procker.SysProcess{
 		Command: command,
 		Env:     env,
+		Stdin:   os.Stdin,
 		Stdout:  os.Stdout,
 		Stderr:  os.Stderr,
 	}
