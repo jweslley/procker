@@ -132,7 +132,7 @@ func parseEnv(filepath string) []string {
 	file, err := os.Open(filepath)
 	if err != nil {
 		if filepath == defaultEnvfile {
-			return []string{}
+			return os.Environ()
 		} else {
 			failIf(err)
 		}
@@ -141,7 +141,7 @@ func parseEnv(filepath string) []string {
 
 	env, err := procker.ParseEnv(file)
 	failIf(err)
-	return env
+	return append(os.Environ(), env...)
 }
 
 func longestName(processes map[string]string) int {
