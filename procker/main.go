@@ -7,7 +7,7 @@ import (
 )
 
 const programName = "procker"
-const programVersion = "0.1.0"
+const programVersion = "0.1.1"
 
 type command struct {
 	desc string
