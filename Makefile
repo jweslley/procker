@@ -1,17 +1,17 @@
-BUILD_DIR=bin
+PROGRAM=procker
 VERSION=0.1.1
+LDFLAGS="-X main.programVersion=$(VERSION)"
 
-all: tests
-
-install:
-	go install -v ./...
-
-tests: deps
-	go test -v ./...
+all: test
 
 deps:
 	go get ./...
-	go get github.com/gobuild/gobuild3/packer
+
+install: deps
+	go install -a -v -ldflags $(LDFLAGS) ./cmd/...
+
+test: deps
+	go test -v ./...
 
 qa:
 	go vet
@@ -20,10 +20,16 @@ qa:
 	go tool cover -html=.cover~
 
 dist:
-	packer --os linux  --arch amd64 --output procker-linux-amd64-$(VERSION).zip
-	packer --os linux  --arch 386   --output procker-linux-386-$(VERSION).zip
-	packer --os darwin --arch amd64 --output procker-mac-amd64-$(VERSION).zip
-	packer --os darwin --arch 386   --output procker-mac-386-$(VERSION).zip
+	@for os in linux darwin; do \
+		for arch in 386 amd64; do \
+			target=$(PROGRAM)-$$os-$$arch-$(VERSION); \
+			echo Building $$target; \
+			GOOS=$$os GOARCH=$$arch go build -ldflags $(LDFLAGS) -o $$target/$(PROGRAM) ./cmd/... ; \
+			cp ./README.md ./LICENSE $$target; \
+			tar -zcf $$target.tar.gz $$target; \
+			rm -rf $$target;                   \
+		done                                 \
+	done
 
 clean:
-	rm -rf $(BUILD_DIR) *.zip
+	rm -rf *.tar.gz

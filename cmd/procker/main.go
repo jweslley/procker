@@ -6,8 +6,10 @@ import (
 	"os"
 )
 
-const programName = "procker"
-const programVersion = "0.1.1"
+var (
+	programName    = "procker"
+	programVersion = "dev"
+)
 
 type command struct {
 	desc string
